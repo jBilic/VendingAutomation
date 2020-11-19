@@ -21,7 +21,7 @@ DHT dht(DHTPIN, DHTTYPE);
 const int switch_pin = 14; //pin prekidača
 bool sw_stat = false; //status prekidača
 
-int relay_pin[NUM_RELAYS] = {26}; //pinOVI releja
+int relay_pin[NUM_RELAYS] = {26}; //pinovi releja
 const char* PARAM_INPUT_1 = "relay";
 const char* PARAM_INPUT_2 = "state";
 
@@ -139,7 +139,7 @@ String outputsState;
 String readDHTTemperature() {
   float t = dht.readTemperature();
   if (isnan(t)) { 
-    Serial.println("Failed to read from DHT sensor!");
+    Serial.println("Neuspješno čitanje podataka sa DHT senzora!");
     return "--";
   }
   else {
@@ -152,7 +152,7 @@ String readDHTTemperature() {
 String readDHTHumidity() {
   float h = dht.readHumidity();
   if (isnan(h)) {
-    Serial.println("Failed to read from DHT sensor!");
+    Serial.println("Neuspješno čitanje podataka sa DHT senzora!");
     return "--";
   }
   else {
@@ -231,18 +231,18 @@ void setup() {
       digitalWrite(relay_pin[i-1], LOW);
     }
   }
-  Serial.println("Starting connection");
+  Serial.println("Spajam na Wifi...");
   while(WiFi.status() != WL_CONNECTED) { 
     delay(500);
-    Serial.print("Connecting...");
+    Serial.print("...");
   }
   Serial.println("");
-  Serial.print("Connected to WiFi network with IP Address: ");
+  Serial.print("Spojen na WiFi sa IP adresom: ");
   Serial.println(WiFi.localIP());
 
 
 
-  // Route for root / web page
+  // Lokalni web
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
     request->send_P(200, "text/html", index_html, processor);
   });
