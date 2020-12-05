@@ -4,12 +4,16 @@
 #include <Adafruit_Sensor.h>
 #include <DHT.h>
 #include <Arduino_JSON.h>
+#include "Arduino_JSON.h"
 #include <HTTPClient.h>
 
 //WiFi login i lokalni server
 const char* ssid = "HUAWEI P20 lite";
 const char* password = "jure1234";
 AsyncWebServer server(80);
+const char* serverName = "http://bilateks-fidus.hr/post-esp-data.php";
+String apiKeyValue = "tPmAT5Ab3j7F9";
+
 
 //GPIO postavke, postavke senzora i releja
 #define DHTPIN 27 //pin DHT11 senzora
@@ -17,6 +21,9 @@ AsyncWebServer server(80);
 #define RELAY_NO    true
 #define NUM_RELAYS  1
 DHT dht(DHTPIN, DHTTYPE);
+String deviceLocation = "Radnička 282";
+String clientID = "Aspira d.o.o";
+String deviceID = "A0012G56KLM";
 
 const int switch_pin = 14; //pin prekidača
 bool sw_stat = false; //status prekidača
@@ -24,6 +31,10 @@ bool sw_stat = false; //status prekidača
 int relay_pin[NUM_RELAYS] = {26}; //pinovi releja
 const char* PARAM_INPUT_1 = "relay";
 const char* PARAM_INPUT_2 = "state";
+
+const long interval = 5000;
+unsigned long previousMillis = 0;
+String outputsState;
 
 //***************WEB***************//
 
@@ -120,18 +131,6 @@ setInterval(function ( ) {
 
 </script>
 </html>)rawliteral";
-
-
-//Server postavke
-/*
-const char* serverName = "http://www.bilateks-fidus.hr/esp-outputs-action.php?action=outputs_state&board=1";
-const long interval = 500; // interval zahtjeva prema bazi u ms
-unsigned long previousMillis = 0; 
-
-String outputsState;
-*/
-
-
 
 
 
@@ -285,10 +284,55 @@ void setup() {
   }
 
 void loop(){
-  
+
+//Check WiFi connection status
+  if(WiFi.status()== WL_CONNECTED){
+    HTTPClient http;
+    
+    // Your Domain name with URL path or IP address with path
+    http.begin(serverName);
+    
+    // Specify content-type header
+    http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+    
+    // Prepare your HTTP POST request data
+    String httpRequestData = "api_key=" + apiKeyValue + "&DeviceID=" + deviceID
+                          + "&Lokacija=" + deviceLocation + "&Temperatura=" + readDHTTemperature()
+                          + "&Vlaga=" + readDHTHumidity() + "&Twix" + stockStatus() + "";
+    Serial.print("httpRequestData: ");
+    Serial.println(httpRequestData);
+    
+    // You can comment the httpRequestData variable above
+    // then, use the httpRequestData variable below (for testing purposes without the BME280 sensor)
+    //String httpRequestData = "api_key=tPmAT5Ab3j7F9&sensor=BME280&location=Office&value1=24.75&value2=49.54&value3=1005.14";
+
+    // Send HTTP POST request
+    int httpResponseCode = http.POST(httpRequestData);
+     
+    // If you need an HTTP request with a content type: text/plain
+    //http.addHeader("Content-Type", "text/plain");
+    //int httpResponseCode = http.POST("Hello, World!");
+    
+    // If you need an HTTP request with a content type: application/json, use the following:
+    //http.addHeader("Content-Type", "application/json");
+    //int httpResponseCode = http.POST("{\"value1\":\"19\",\"value2\":\"67\",\"value3\":\"78\"}");
+        
+    if (httpResponseCode>0) {
+      Serial.print("HTTP Response code: ");
+      Serial.println(httpResponseCode);
+    }
+    else {
+      Serial.print("Error code: ");
+      Serial.println(httpResponseCode);
+    }
+    http.end();
+  }
+  else {
+    Serial.println("WiFi Disconnected");
+  }
+  //Podaci se šalju svakih 15 sekundi
+  delay(15000);  
 }
-
-
 
 
 
