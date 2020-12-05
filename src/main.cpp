@@ -8,12 +8,12 @@
 #include <HTTPClient.h>
 
 //WiFi login i lokalni server
-const char* ssid = "HUAWEI P20 lite";
-const char* password = "jure1234";
+const char* ssid = "xxxxx";
+const char* password = "xxxxx";
 AsyncWebServer server(80);
-const char* serverName = "http://bilateks-fidus.hr/post-esp-data.php";
+const char* serverName = "xxxxx";
 String apiKeyValue = "tPmAT5Ab3j7F9";
-
+String statusNone = "N/A";
 
 //GPIO postavke, postavke senzora i releja
 #define DHTPIN 27 //pin DHT11 senzora
@@ -21,7 +21,7 @@ String apiKeyValue = "tPmAT5Ab3j7F9";
 #define RELAY_NO    true
 #define NUM_RELAYS  1
 DHT dht(DHTPIN, DHTTYPE);
-String deviceLocation = "Radnička 282";
+String deviceLocation = "Radnička 111";
 String clientID = "Aspira d.o.o";
 String deviceID = "A0012G56KLM";
 
@@ -296,9 +296,10 @@ void loop(){
     http.addHeader("Content-Type", "application/x-www-form-urlencoded");
     
     // Prepare your HTTP POST request data
-    String httpRequestData = "api_key=" + apiKeyValue + "&DeviceID=" + deviceID
-                          + "&Lokacija=" + deviceLocation + "&Temperatura=" + readDHTTemperature()
-                          + "&Vlaga=" + readDHTHumidity() + "&Twix" + stockStatus() + "";
+    String httpRequestData = "api_key=" + apiKeyValue + "&devId=" + deviceID
+                          + "&locationId=" + deviceLocation + "&userId=" + clientID + "&temp=" + readDHTTemperature()
+                          + "&humidity=" + readDHTHumidity() + "&supp1" + String(stockStatus()) + "&supp2" + statusNone 
+                          + "&supp3" + statusNone + "&supp4" + statusNone;
     Serial.print("httpRequestData: ");
     Serial.println(httpRequestData);
     
