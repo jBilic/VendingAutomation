@@ -30,3 +30,16 @@ Their roles are:
 
 
 After visiting **your-website-url.com/esp-vending-node.php** you should see the sensor readings.
+
+## Current status
+
+Server is up and running, all data is being transmitted to server and stored in database.
+Everything can be accesed at: 
+http://purs.a2hosted.com/esp-vending-node.php
+
+## Remaninig tasks:
+
+1. Implement relay value storing in SQL database - **HIGH PRIORITY** 
+2. Implement GET function in ESP32 code to retrieve relay status from server - **HIGH PRIORITY** 
+3. Fix storing of string values for fields coffee and cup. Currently nothing is being stored - **HIGH PRIORITY**
+4. Fix coffee and cup counting function to count down with button presses on GPIO pins - **LOW PRIORITY**
