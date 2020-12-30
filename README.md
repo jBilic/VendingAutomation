@@ -4,13 +4,13 @@
 
 Entire project is hosted on A2Hosting.com. All tasks are to be done through cPanel interface.
 
-##SQL database stuff
+## SQL database stuff
 
 Create SQL database. Create a user and assign it to the databse. Database name, username and password have to be updated in esp-post-data.php and esp-database.php
 Creata a table in this database with commands from txt file (SQL setup.txt)
 
 
-##Server side stuff
+## Server side stuff
 
 These **four** files:
 
