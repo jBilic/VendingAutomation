@@ -19,7 +19,7 @@ These **four** files:
 * _esp-vending-node.php
 * _esp-style.css
 
-need to be placed in public_html folder of server.
+need to be placed in _public_html_ folder of server.
 
 Their roles are:
 
