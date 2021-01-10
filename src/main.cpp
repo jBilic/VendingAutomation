@@ -11,6 +11,7 @@
 const char* ssid = "HUAWEI P20 lite";
 const char* password = "jure1234";
 const char* serverName = "http://purs.a2hosted.com/esp-post-data.php";
+const char* serverName2 = "http://purs.a2hosted.com/esp-post-data.php/?action=get_last_relay_value";
 
 //Podaci o uređaju i API ključ koji mora biti jednak API ključu na serveru
 String apiKeyValue = "tPmAT5Ab3j7F9";
@@ -94,6 +95,31 @@ void statusCounter(){
   }
 }
 
+String httpGETLastRelayValue(const char* serverName2){
+
+  HTTPClient http2;
+  http2.begin(serverName2);
+
+  int httpResponseCode1 = http2.GET();
+
+  String payload = "{}"; 
+
+  if(httpResponseCode1 > 0) {
+    Serial.print("HTTP Response code GET: ");
+    Serial.println(httpResponseCode1);
+    payload = http2.getString();
+  } else {
+    Serial.print("Error code: ");
+    Serial.println(httpResponseCode1);
+  }
+
+  http2.end();
+  return payload;
+}
+
+
+
+
 // setup je standardni dio Arduino sintakse i on postavlja inicijalne parametre programa - vrsta pinova, brzina serijske komunikacije itd.
 void setup() {
   Serial.begin(115200);
@@ -117,7 +143,7 @@ void setup() {
 
 // loop je standardni dio Arduino sintakse i u njemu se vrti glavni program
 void loop() {
-    statusCounter(); // poziv funkcije brojača - funkcija NE RADI tj ne reagira na tipkalo
+    //statusCounter(); // poziv funkcije brojača - funkcija NE RADI tj ne reagira na tipkalo
 
     // donji dio se izvršava dok je uređaj spojen na mrežu - šalju se svi podaci na server preko POST funkcije
     // potrebno je uvrsitit i GET funkciju koja povlači status releja sa mreže te uključuje/isključuje relej ovisno o statusu
@@ -129,7 +155,7 @@ void loop() {
 
       String httpRequestData = "api_key=" + apiKeyValue + "&sens=" + deviceID
                           + "&loc=" + deviceLocation + "&usex=" + clientID + "&temp=" + readDHTTemperature()
-                          + "&humid=" + readDHTHumidity() + "&coffee" + coffeeStatus() + "&cup" + cupStatus();
+                          + "&humid=" + readDHTHumidity() + "&coffee=" + coffeeStatus() + "&cup=" + cupStatus();
 
       Serial.print("httpRequestData: ");
       Serial.println(httpRequestData);
@@ -139,7 +165,7 @@ void loop() {
       int httpResponseCode = http.POST(httpRequestData); // POST zahtjev prema serveru. Odgovor servera se sprema u httpResponseCode 
 
       if (httpResponseCode>0) {
-        Serial.print("HTTP Response code: "); // ispisuje status odgovora servera (200 je ok, 500 je problem)
+        Serial.print("HTTP Response code POST: "); // ispisuje status odgovora servera (200 je ok, 500 je problem)
         Serial.println(httpResponseCode);
       }
       else {
@@ -148,11 +174,39 @@ void loop() {
       }
       http.end(); // prekida komunikaciju kako bi se oslobodili resursi
       delay(2000); // čeka 2 sekunde prije novog slanja
+
+            
+
+      String relayOutput = httpGETLastRelayValue(serverName2);
+      Serial.print("Relay status: ");
+      Serial.println(relayOutput);
+      /*
+      JSONVar relayOutputJson = JSON.parse(relayOutput);
+  
+      if (JSON.typeof(relayOutputJson) == "undefined") {
+      Serial.println("Parsing input failed!");
+      }
+
+      Serial.print("JSON object = ");
+      Serial.println(relayOutputJson);
+      
+      int relayValue = relayOutputJson["Relay_Status"];
+      */
+      if(relayOutput==0){
+        digitalWrite(MAIN_RELAY, RELAY_OFF);
+      } else {
+        digitalWrite(MAIN_RELAY, RELAY_ON);
+      }
     }
     else {
       Serial.println("WiFi Disconnected");
     }
   }
+
+
+
+
+
 
 
 
