@@ -11,7 +11,7 @@
 const char* ssid = "HUAWEI P20 lite";
 const char* password = "jure1234";
 const char* serverName = "http://purs.a2hosted.com/esp-post-data.php";
-const char* serverName2 = "http://purs.a2hosted.com/esp-post-data.php/?action=get_last_relay_value";
+const char* serverName2 = "http://purs.a2hosted.com/esp-post-data.php/?action=get_last_relay_value"; //upitno
 
 //Podaci o uređaju i API ključ koji mora biti jednak API ključu na serveru
 String apiKeyValue = "tPmAT5Ab3j7F9";
