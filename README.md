@@ -18,6 +18,7 @@ These **four** files:
 * _esp-database.php
 * _esp-vending-node.php
 * _esp-style.css
+* _esp-ajax.php 
 
 need to be placed in _public_html_ folder of server.
 
