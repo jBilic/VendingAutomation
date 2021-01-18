@@ -1,13 +1,4 @@
-/**
-  Rui Santos
-  Complete project details at https://RandomNerdTutorials.com/cloud-weather-station-esp32-esp8266/
 
-  Permission is hereby granted, free of charge, to any person obtaining a copy
-  of this software and associated documentation files.
-
-  The above copyright notice and this permission notice shall be included in all
-  copies or substantial portions of the Software.
-**/
 body {
     width: 60%;
     margin: auto;
@@ -19,7 +10,9 @@ body {
 
 @media screen and (max-width: 800px) {
     body {
+        
         width: 100%;
+      
     }
 }
 
@@ -38,7 +31,7 @@ h2 { font-size: 2.5rem; }
 .header {
 	 padding: 1rem;
 	 margin: 0 0 2rem 0;
-	 background: #f2f2f2;
+	 background: #EFE0BB;
 }
 
 h1 {
@@ -46,11 +39,16 @@ h1 {
     font-family: Arial, sans-serif;
     text-align: center;
     text-transform: uppercase;
-}
+    }
 
 .content {
     display: flex;
 }
+
+tx { 
+    font-weight: 800;
+}
+
 
 @media screen and (max-width: 500px) /* Mobile */ {
     .content {
@@ -135,7 +133,7 @@ h1 {
     width: 8.75rem;
     height: 4.375rem;
     margin-left: -4.375rem;
-    background: #fff;
+    background: #ab7343;
     border-radius: 50% 50% 50% 50% / 100% 100% 0% 0%;
 }
 
@@ -173,16 +171,20 @@ h1 {
 #tableReadings { border-collapse: collapse; }
 
 #tableReadings td, #tableReadings th {
-    border: 1px solid #ddd;
-    padding: 10px;
+    border: 0.5px solid #000000;
+    padding: 7px;
+  
+    
 }
 
-#tableReadings tr:nth-child(even){ background-color: #f2f2f2; }
+#tableReadings tr:nth-child(even){ background-color: #EFE0BB; }
 
-#tableReadings tr:hover { background-color: #ddd; }
+#tableReadings tr:hover { background-color: #ffbbbb; }
 
 #tableReadings th {
     padding: 10px;
-    background-color: #2f4468;
-    color: white;
+    background-color: #312113;
+    color: #EFE0BB;
+    
+    
 }

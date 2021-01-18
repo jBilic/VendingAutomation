@@ -1,13 +1,3 @@
-<!--
-  Rui Santos
-  Complete project details at https://RandomNerdTutorials.com/cloud-weather-station-esp32-esp8266/
-
-  Permission is hereby granted, free of charge, to any person obtaining a copy
-  of this software and associated documentation files.
-
-  The above copyright notice and this permission notice shall be included in all
-  copies or substantial portions of the Software.
--->
 <?php
     include_once('esp-database.php');
     if ($_GET["readingsCount"]){
@@ -26,6 +16,7 @@
     $last_reading_temp = $last_reading["temp"];
     $last_reading_humi = $last_reading["humid"];
     $last_reading_time = $last_reading["reading_time"];
+    $last_reading_status = $last_reading["Relay_Status"];   //sprema dohvaćenu zadnju vrijednost Relay_Status polja
 
     // Uncomment to set timezone to - 1 hour (you can change 1 to any number)
     //$last_reading_time = date("Y-m-d H:i:s", strtotime("$last_reading_time - 1 hours"));
@@ -49,21 +40,73 @@
         <link rel="stylesheet" type="text/css" href="esp-style.css">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+        <script>
+            $(document).ready(function(){
+                $("#switch").click(function(){                              //kad kliknemo na toggle, pokreće upisivanje u bazu trenutnog statusa
+                    var a = $("#switch").prop("checked");
+                    var b = 0;
+                    if(a)
+                        b = 1;
+                    $.ajax({
+                        type:"POST",
+                        url: "esp-ajax.php",
+                        data: {
+                            "value": b
+                        }
+                    })
+                })
+                $("#switch").prop("checked", <?= $last_reading_status ?>);  //ovisno o vrijednosti last_reading_statusa postavlja toggle u checked ili unchecked nakon refresha stranice
+            })
+        </script>
     </head>
     <header class="header">
         <h1>Status samoposlužnog aparata</h1>
     </header>
 <body>
+   
+  <body style="background-color:#ab7343;"> 
+        
+    <h2>Zadnje očitanje: <?php echo $last_reading_time; ?></h2>
     
-    <p>Zadnje očitanje: <?php echo $last_reading_time; ?></p>
+     <img src="https://www.freepnglogos.com/uploads/coffee-logo-png/mr-coffee-logo-11.png" alt="Trulli" width="500" height="150">
     
 <head> 
     <title>VMNS</title> 
       
     <style> 
         h1 { 
-            color: black; 
+            color: #4c3525;
+            font-family: Verdana;
+          
         } 
+        h3 { 
+            color: #4c3525;
+            font-weight: 800;
+        
+        }
+        h2 { 
+             width : 150px; 
+            height : 100px;
+            top: 500px;
+            left: 45%;
+             position: absolute;
+             font-size: 1.2rem;
+             font-family: Arial;
+            
+        }
+        td {
+             
+        }
+        header { 
+           
+            border-radius: 0px 0px 20px 20px;
+            overflow: hidden;
+         
+            
+        }
+     
+    
+        
                 
         /* toggle in label designing */ 
         .toggle { 
@@ -115,13 +158,11 @@
 <body> 
     <center> 
         <h3>Uključivanje i isključivanje uređaja</h3> 
-        <input type="checkbox" id="switch"
-                    class="checkbox" /> 
-        <label for="switch" class="toggle"> 
-            <p>OFF      ON</p> 
-        </label> 
+        <input type="checkbox" id="switch" class="checkbox" /> 
+        <label for="switch" class="toggle"> </label>
     </center> 
-</body> 
+    
+</body>
     
     <section class="content">
 	    <div class="box gauge--1">
@@ -135,7 +176,7 @@
 		        <tr>
 		            <td>Min</td>
                     <td>Max</td>
-                    <td>Average</td>
+                    <td>Prosjek</td>
                 </tr>
                 <tr>
                     <td><?php echo $min_temp['min_amount']; ?> &deg;C</td>
@@ -144,6 +185,7 @@
                 </tr>
             </table>
         </div>
+        
         <div class="box gauge--2">
             <h3>VLAGA</h3>
             <div class="mask">
@@ -155,7 +197,7 @@
                 <tr>
                     <td>Min</td>
                     <td>Max</td>
-                    <td>Average</td>
+                    <td>Prosjek</td>
                 </tr>
                 <tr>
                     <td><?php echo $min_humi['min_amount']; ?>%</td>
@@ -165,6 +207,7 @@
             </table>
         </div>
     </section>
+
 <?php
     echo   '<h3> Pregled zadnjih 30 očitanja </h3>
             <table cellspacing="5" cellpadding="5" id="tableReadings">
@@ -221,12 +264,9 @@
     setHumidity(value2);
 
     function setTemperature(curVal){
-    	//set range for Temperature in Celsius -5 Celsius to 38 Celsius
-    	var minTemp = -5.0;
-    	var maxTemp = 38.0;
-        //set range for Temperature in Fahrenheit 23 Fahrenheit to 100 Fahrenheit
-    	//var minTemp = 23;
-    	//var maxTemp = 100;
+    	//temperatura u Celzijusima
+    	var minTemp = -10.0;
+    	var maxTemp = 75.0;
 
     	var newVal = scaleValue(curVal, [minTemp, maxTemp], [0, 180]);
     	$('.gauge--1 .semi-circle--mask').attr({

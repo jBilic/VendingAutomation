@@ -8,28 +8,6 @@
     // REPLACE with Database user password
     $password = "tvzmiuzeozivot";
 
-  function insertReading($sens, $loc, $usex, $temp, $humid, $coffee, $cup) {
-    global $servername, $username, $password, $dbname;
-
-    // Create connection
-    $conn = new mysqli($servername, $username, $password, $dbname);
-    // Check connection
-    if ($conn->connect_error) {
-      die("Connection failed: " . $conn->connect_error);
-    }
-
-    $sql = "INSERT INTO SensorData (sens, loc, usex, temp, humid, coffee, cup)
-    VALUES ('" . $sens . "', '" . $loc . "', '" . $usex . "', '" . $temp . "', '" . $humid . "', '" . $coffee . "', '" . $cup . "')";
-
-    if ($conn->query($sql) === TRUE) {
-      return "New record created successfully";
-    }
-    else {
-      return "Error: " . $sql . "<br>" . $conn->error;
-    }
-    $conn->close();
-  }
-  
   function getAllReadings($limit) {
     global $servername, $username, $password, $dbname;
 
@@ -60,6 +38,15 @@
     }
 
     $sql = "SELECT id, sens, loc, usex, temp, humid, coffee, cup, reading_time FROM SensorData order by reading_time desc limit 1" ;
+    $result = $conn->query($sql)->fetch_assoc();
+    
+    $sql = "SELECT Relay_Status FROM RelayData order by Reading_Time desc limit 1";
+    
+    $result2 = $conn->query($sql)->fetch_assoc();
+    $result["Relay_Status"] = $result2["Relay_Status"]; //u postojeće polje "result" dodajemo novu vrijednost
+    
+    return $result;
+    
     if ($result = $conn->query($sql)) {
       return $result->fetch_assoc();
     }
@@ -109,7 +96,7 @@
     $conn->close();
   }
 
-  function avgReading($limit, $value) {
+   function avgReading($limit, $value) {
      global $servername, $username, $password, $dbname;
 
     // Create connection
