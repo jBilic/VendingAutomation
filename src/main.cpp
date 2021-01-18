@@ -3,35 +3,35 @@
 #include <ESPAsyncWebServer.h>
 #include <Adafruit_Sensor.h>
 #include <DHT.h>
-#include <Arduino_JSON.h>
-#include "Arduino_JSON.h"
 #include <HTTPClient.h>
+#include <stdio.h>
+#include <EEPROM.h>
 
-//WiFi login i link na server tj. PHP skriptu
-const char* ssid = "HUAWEI P20 lite";
-const char* password = "jure1234";
-const char* serverName = "http://purs.a2hosted.com/esp-post-data.php";
-const char* serverName2 = "http://purs.a2hosted.com/esp-post-data.php/?action=get_last_relay_value"; //upitno
 
-//Podaci o uređaju i API ključ koji mora biti jednak API ključu na serveru
-String apiKeyValue = "tPmAT5Ab3j7F9";
-String deviceLocation = "Radnicka";
-String clientID = "Aspira";
-String deviceID = "A001";
+const char* ssid = "HUAWEI P20 lite";                                                                 //WFi AP                                                 
+const char* password = "jure1234";                                                                    //Password za Wifi AP
+const char* serverName = "http://purs.a2hosted.com/esp-post-data.php";                                //HTTP POST
+const char* serverName2 = "http://purs.a2hosted.com/esp-post-data.php?action=get_last_relay_value";   //HTTP GET
+
+
+String apiKeyValue = "tPmAT5Ab3j7F9";           //API ključ koji mora biti jednak API ključu na serveru
+String deviceLocation = "Radnicka";             //Lokacija - promjeniti ovisno o korisniku
+String clientID = "Aspira";                     //Zakupac - promjeniti ovisno o korisniku
+String deviceID = "A05901";                     //SN uređaja - promjeniti ovisno o korisniku
 
 //GPIO postavke 
-#define DHTPIN 27 //pin DHT11 senzora
-#define DHTTYPE    DHT11     // odabir vrste senzora - DHT 11
+#define DHTPIN 27             //pin DHT11 senzora
+#define DHTTYPE    DHT11      //tip senzora - DHT 11
+#define MAIN_RELAY 26         //pin releja 
+#define COFFEE_BTN 14         //pin tipke za kavu
+#define CUP_BTN 13            //pin tipke za praznu šalicu
+#define REFILL 12             //pin tipke za reset stanja nakon popune
+        
+#define EEPROM_SIZE 4
 DHT dht(DHTPIN, DHTTYPE);
-#define RELAY_ON 1
-#define RELAY_OFF 0
-#define MAIN_RELAY 26 //pin releja 
-#define COFFEE_BTN 14
-#define CUP_BTN 12
-#define REFILL 16 // nakon popune uređaja, aktivira se tipkalo spojeno na ovaj pin i on resetira brojače (coffeeLvl, cupLvl)
 
-int coffeLvl = 10; // inicijalni status broja kava koje uređaj može napraviti. Reset ide preko gore navedenog pina 16 (REFILL)
-int cupLvl = 20; // incijalni broj čaša u uređaju. Reset ide preko gore navedenog pina 16 (REFILL)
+int coffeLvl = 5;            
+int cupLvl = 5;              
 
 
 
@@ -63,47 +63,36 @@ String readDHTHumidity() {
 //*****************VLAGA*****************//
 //*****************KAVA*****************//
 String coffeeStatus(){
-  if (coffeLvl>=5){
+  int x = 0;
+  x = EEPROM.read(0);
+  if (x>=5){
     return String("FULL");
-  } else if (coffeLvl>0 && coffeLvl<5){
+  } else if (x>0 && x<5){
     return String("REFILL NEEDED");
   } else {
     return String("EMPTY");
   }
 }
 //*****************KAVA*****************//
-
 //*****************ČAŠE*****************//
 String cupStatus(){
-  if (cupLvl>=10){
+  int y = 0;
+  y = EEPROM.read(1);
+  if (y>=10){
     return String("FULL");
-  } else if (cupLvl>5 && cupLvl<10){
+  } else if (y>5 && y<10){
     return String("REFILL NEEDED");
   } else {
     return String("EMPTY");
   }
 }
 //*****************ČAŠE*****************//
-
-// statusCounter je pokušaj neke funkcije koje bi trebala vršiti brojanje artikala u uređaju
-void statusCounter(){
-  if(digitalRead(CUP_BTN==HIGH)){
-    cupLvl--;
-  } 
-  if (digitalRead(COFFEE_BTN==HIGH)){
-    coffeLvl--;
-  }
-}
-
+//*****************GET*****************//
 String httpGETLastRelayValue(const char* serverName2){
-
   HTTPClient http2;
   http2.begin(serverName2);
-
   int httpResponseCode1 = http2.GET();
-
   String payload = "{}"; 
-
   if(httpResponseCode1 > 0) {
     Serial.print("HTTP Response code GET: ");
     Serial.println(httpResponseCode1);
@@ -112,25 +101,132 @@ String httpGETLastRelayValue(const char* serverName2){
     Serial.print("Error code: ");
     Serial.println(httpResponseCode1);
   }
-
   http2.end();
   return payload;
 }
-
-
-
-
-// setup je standardni dio Arduino sintakse i on postavlja inicijalne parametre programa - vrsta pinova, brzina serijske komunikacije itd.
-void setup() {
-  Serial.begin(115200);
-  dht.begin(); // započinje čitanje podataka sa DHT senzora
-  WiFi.begin(ssid, password); // započinje spajanje na WiFI
-  pinMode(COFFEE_BTN, INPUT);
-  pinMode(CUP_BTN, INPUT);
-  pinMode(MAIN_RELAY, OUTPUT);
-  digitalWrite(MAIN_RELAY, RELAY_ON); // uključuje relej tj. sami uređaj
+//*****************GET*****************//
+//*****************POST****************//
+void sendPOST(){
+  int a = 0;
+  int b = 0;
   
-  // ispisuje status spajanja na monitor
+  HTTPClient http;
+  http.begin(serverName);
+  http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+  String httpRequestData = "api_key=" + apiKeyValue + "&sens=" + deviceID
+                          + "&loc=" + deviceLocation + "&usex=" + clientID + "&temp=" + readDHTTemperature()
+                          + "&humid=" + readDHTHumidity() + "&coffee=" + coffeeStatus() + "&cup=" + cupStatus();
+
+  //Serial.print("httpRequestData: ");    //za potrebe debugginga i demonstracije
+  //Serial.println(httpRequestData);      //za potrebe debugginga i demonstracije
+  a = EEPROM.read(0);
+  b = EEPROM.read(1);
+
+  Serial.println(a);
+  Serial.println(b);
+  
+
+  int httpResponseCode = http.POST(httpRequestData); // POST zahtjev prema serveru. Odgovor servera se sprema u httpResponseCode 
+
+  if (httpResponseCode>0) {
+  Serial.print("HTTP Response code POST: "); // ispisuje status odgovora servera (200 je ok, 500 je problem)
+  Serial.println(httpResponseCode);
+  } else {
+    Serial.print("Error code: ");
+    Serial.println(httpResponseCode); // ispisuje grešku ako dođe do nje
+  }
+  http.end();
+}
+//*****************POST****************//
+
+
+
+TaskHandle_t Task1;
+TaskHandle_t Task2;
+
+
+void Task_1( void * pvParameters) {
+  int coffeeStat = 0;
+  int cupStat = 0;
+  int refil = 0;
+
+
+  for(;;) {
+    refil = digitalRead(REFILL);
+    if(refil==HIGH){
+          coffeLvl = 10;
+          cupLvl = 20;
+          EEPROM.write(0, coffeLvl);    //kave
+          EEPROM.commit();
+          EEPROM.write(1, cupLvl);      //čaše
+          EEPROM.commit();
+          Serial.println("REFILL - spremljeno");
+          delay(150);
+    } 
+    
+    coffeeStat = digitalRead(COFFEE_BTN);
+    if(coffeeStat==HIGH){
+      if(coffeeStat>0){
+          coffeLvl--;
+          EEPROM.write(0, coffeLvl);
+          EEPROM.commit();
+          Serial.println("COFFEE - spremljeno");
+          delay(150);
+    }}    
+   
+    
+    cupStat = digitalRead(CUP_BTN);
+    if(cupStat==HIGH){
+      if(cupStat>0){
+          cupLvl--;
+          EEPROM.write(1, cupLvl);
+          EEPROM.commit();
+          Serial.println("CUP - spremljeno");
+          delay(150);
+    }}
+    }
+}
+
+void Task_2( void * pvParameters) {
+  for(;;){
+    if(WiFi.status()== WL_CONNECTED){
+      sendPOST();
+      String relayOutput = httpGETLastRelayValue(serverName2);
+        EEPROM.write(2, relayOutput.toInt());
+        EEPROM.commit();
+        if(relayOutput.toInt()==0){
+          digitalWrite(MAIN_RELAY, LOW);
+        } else {
+          digitalWrite(MAIN_RELAY, HIGH);
+      }} else {
+    Serial.println("WiFi Disconnected");
+    }
+    vTaskDelay(2000);
+  }
+}
+
+
+void setup() {
+  int relay_state = 0;
+  Serial.begin(115200);
+  dht.begin(); 
+  EEPROM.begin(EEPROM_SIZE);
+  WiFi.begin(ssid, password);
+
+  pinMode(MAIN_RELAY, OUTPUT);          //postavlja pin releja
+  pinMode(COFFEE_BTN, INPUT);           //postavlja pin za kavu
+  pinMode(CUP_BTN, INPUT);              //postavlja pin za čaše
+  pinMode(REFILL, INPUT);
+  coffeLvl = EEPROM.read(0);
+  cupLvl = EEPROM.read(1);
+  relay_state = EEPROM.read(2);
+
+  if(relay_state!=0){
+    digitalWrite(MAIN_RELAY, HIGH);   // uključuje relej tj. uređaj kod uključenja
+  } else {
+    digitalWrite(MAIN_RELAY, LOW);
+  }
+
   Serial.println("Spajam na Wifi...");
   while(WiFi.status() != WL_CONNECTED) { 
     delay(500);
@@ -139,69 +235,15 @@ void setup() {
   Serial.println("");
   Serial.print("Spojen na WiFi sa IP adresom: ");
   Serial.println(WiFi.localIP());
+
+  xTaskCreatePinnedToCore(Task_1, "Task1", 10000, NULL, 0, &Task1, 0);
+  xTaskCreatePinnedToCore(Task_2, "Task2", 10000, NULL, 1, &Task2, 0);
+  delay(500); 
 }
 
-// loop je standardni dio Arduino sintakse i u njemu se vrti glavni program
-void loop() {
-    //statusCounter(); // poziv funkcije brojača - funkcija NE RADI tj ne reagira na tipkalo
-
-    // donji dio se izvršava dok je uređaj spojen na mrežu - šalju se svi podaci na server preko POST funkcije
-    // potrebno je uvrsitit i GET funkciju koja povlači status releja sa mreže te uključuje/isključuje relej ovisno o statusu
-    if(WiFi.status()== WL_CONNECTED){
-      HTTPClient http;
-
-      http.begin(serverName);
-      http.addHeader("Content-Type", "application/x-www-form-urlencoded");
-
-      String httpRequestData = "api_key=" + apiKeyValue + "&sens=" + deviceID
-                          + "&loc=" + deviceLocation + "&usex=" + clientID + "&temp=" + readDHTTemperature()
-                          + "&humid=" + readDHTHumidity() + "&coffee=" + coffeeStatus() + "&cup=" + cupStatus();
-
-      Serial.print("httpRequestData: ");
-      Serial.println(httpRequestData);
-      Serial.println(coffeLvl);
-      Serial.println(cupLvl);
-
-      int httpResponseCode = http.POST(httpRequestData); // POST zahtjev prema serveru. Odgovor servera se sprema u httpResponseCode 
-
-      if (httpResponseCode>0) {
-        Serial.print("HTTP Response code POST: "); // ispisuje status odgovora servera (200 je ok, 500 je problem)
-        Serial.println(httpResponseCode);
-      }
-      else {
-        Serial.print("Error code: ");
-        Serial.println(httpResponseCode); // ispisuje grešku ako dođe do nje
-      }
-      http.end(); // prekida komunikaciju kako bi se oslobodili resursi
-      delay(2000); // čeka 2 sekunde prije novog slanja
-
-            
-
-      String relayOutput = httpGETLastRelayValue(serverName2);
-      Serial.print("Relay status: ");
-      Serial.println(relayOutput);
-      /*
-      JSONVar relayOutputJson = JSON.parse(relayOutput);
-  
-      if (JSON.typeof(relayOutputJson) == "undefined") {
-      Serial.println("Parsing input failed!");
-      }
-
-      Serial.print("JSON object = ");
-      Serial.println(relayOutputJson);
-      
-      int relayValue = relayOutputJson["Relay_Status"];
-      */
-      if(relayOutput==0){
-        digitalWrite(MAIN_RELAY, RELAY_OFF);
-      } else {
-        digitalWrite(MAIN_RELAY, RELAY_ON);
-      }
-    }
-    else {
-      Serial.println("WiFi Disconnected");
-    }
-  }
+void loop(){
+  vTaskDelay(10000);
+}
 
 
 

@@ -37,6 +37,9 @@ Server is up and running, all data is being transmitted to server and stored in 
 Everything can be accesed at: 
 http://purs.a2hosted.com/esp-vending-node.php
 
+There are two separate tasks running - one that handles GET and POST communication with server (Task_1), running on Core 0.
+Second task watches button inputs and is running on Core 1 (Task_2).
+
 ## Remaninig tasks:
 
 1. Implement relay value storing in SQL database - **HIGH PRIORITY** 

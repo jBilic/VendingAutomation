@@ -1,4 +1,4 @@
-v<?php
+<?php
 include_once('esp-database.php');
   
 $servername = "localhost";
@@ -10,11 +10,10 @@ $username = "pursahos_jure";
 // REPLACE with Database user password
 $password = "tvzmiuzeozivot";
 
-// Keep this API Key value to be compatible with the ESP32 code provided in the project page. 
-// If you change this value, the ESP32 sketch needs to match
 $api_key_value = "tPmAT5Ab3j7F9";
 
 $api_key= $sens = $loc = $usex = $temp = $humid = $coffee = $cup = "";
+
 
   if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $api_key = test_input($_POST["api_key"]);
@@ -27,35 +26,52 @@ $api_key= $sens = $loc = $usex = $temp = $humid = $coffee = $cup = "";
       $coffee = test_input($_POST["coffee"]);
       $cup = test_input($_POST["cup"]);
       
-    $result = insertReading($sens, $loc, $usex, $temp, $humid, $coffee, $cup);
-    echo $result;
-        
     // Create connection
     $conn = new mysqli($servername, $username, $password, $dbname);
     // Check connection
     if ($conn->connect_error) {
         die("Connection failed: " . $conn->connect_error);
-        } 
+    } 
         
     $sql = "INSERT INTO SensorData (sens, loc, usex, temp, humid, coffee, cup) VALUES ('" . $sens . "', '" . $loc . "', '" . $usex . "', '" . $temp . "', '" . $humid . "', '" . $coffee . "','" . $cup . "')";
         
-        if ($conn->query($sql) === TRUE) {
-            echo "New record created successfully";
-        } 
-        else {
-            echo "Error: " . $sql . "<br>" . $conn->error;
-        }
+    if ($conn->query($sql) === TRUE) {
+        echo "New record created successfully";
+    } else {
+        echo "Error: " . $sql . "<br>" . $conn->error;
+    } 
     
-        $conn->close();
-    }
-    else {
-        echo "Wrong API Key provided.";
-    }
+    $conn->close();
+    
+   } else {
+      echo "Wrong API Key provided.";
+   } }
+   
+   
 
-}
-else {
-    echo "No data posted with HTTP POST.";
-}
+    if ($_SERVER["REQUEST_METHOD"] == "GET") {
+        $action = test_input($_GET["action"]);
+        if ($action == "get_last_relay_value") {
+        // Create connection
+        $conn = new mysqli($servername, $username, $password, $dbname);
+        // Check connection
+        if ($conn->connect_error) {
+            die("Connection failed: " . $conn->connect_error);
+        }
+
+        $sql = "SELECT Relay_Status FROM RelayData ORDER BY id DESC LIMIT 1";
+            if ($result3 = $conn->query($sql)) {
+                while ($row = $result3->fetch_assoc()) {
+                echo ($row["Relay_Status"]);
+        }}
+        else {
+            return false;
+        }
+        $conn->close();
+    } else {
+            echo "Invalid HTTP request.";
+    }}
+    
 
 function test_input($data) {
     $data = trim($data);
@@ -63,3 +79,4 @@ function test_input($data) {
     $data = htmlspecialchars($data);
     return $data;
 }
+?>
