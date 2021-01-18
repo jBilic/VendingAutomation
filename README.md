@@ -30,7 +30,7 @@ Their roles are:
 * esp-ajax.php -> handles relay status from button to SQL and vice-versa
 
 
-After visiting **your-website-url.com/esp-vending-node.php** you should see the sensor readings.
+After visiting **http://purs.a2hosted.com/esp-vending-node.php** you should see the sensor readings.
 
 ## Current status
 
