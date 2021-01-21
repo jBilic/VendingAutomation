@@ -33,8 +33,6 @@ DHT dht(DHTPIN, DHTTYPE);
 int coffeLvl = 5;            
 int cupLvl = 5;              
 
-
-
 //**************TEMPERATURA**************//
 String readDHTTemperature() {
   float t = dht.readTemperature();
@@ -65,9 +63,9 @@ String readDHTHumidity() {
 String coffeeStatus(){
   int x = 0;
   x = EEPROM.read(0);
-  if (x>=5){
+  if (x<=15){
     return String("FULL");
-  } else if (x>0 && x<5){
+  } else if (x>15 && x<20){
     return String("REFILL NEEDED");
   } else {
     return String("EMPTY");
@@ -78,9 +76,9 @@ String coffeeStatus(){
 String cupStatus(){
   int y = 0;
   y = EEPROM.read(1);
-  if (y>=10){
+  if (y<=20){
     return String("FULL");
-  } else if (y>5 && y<10){
+  } else if (y>25 && y<30){
     return String("REFILL NEEDED");
   } else {
     return String("EMPTY");
@@ -109,23 +107,21 @@ String httpGETLastRelayValue(const char* serverName2){
 void sendPOST(){
   int a = 0;
   int b = 0;
-  
-  HTTPClient http;
+    HTTPClient http;
   http.begin(serverName);
   http.addHeader("Content-Type", "application/x-www-form-urlencoded");
   String httpRequestData = "api_key=" + apiKeyValue + "&sens=" + deviceID
-                          + "&loc=" + deviceLocation + "&usex=" + clientID + "&temp=" + readDHTTemperature()
+                          + "&loc=" + deviceLocation + "&user=" + clientID + "&temp=" + readDHTTemperature()
                           + "&humid=" + readDHTHumidity() + "&coffee=" + coffeeStatus() + "&cup=" + cupStatus();
 
-  //Serial.print("httpRequestData: ");    //za potrebe debugginga i demonstracije
-  //Serial.println(httpRequestData);      //za potrebe debugginga i demonstracije
+  Serial.print("httpRequestData: ");    //za potrebe debugginga i demonstracije
+  Serial.println(httpRequestData);      //za potrebe debugginga i demonstracije
+  
   a = EEPROM.read(0);
   b = EEPROM.read(1);
-
   Serial.println(a);
   Serial.println(b);
   
-
   int httpResponseCode = http.POST(httpRequestData); // POST zahtjev prema serveru. Odgovor servera se sprema u httpResponseCode 
 
   if (httpResponseCode>0) {
@@ -150,40 +146,44 @@ void Task_1( void * pvParameters) {
   int cupStat = 0;
   int refil = 0;
 
-
   for(;;) {
     refil = digitalRead(REFILL);
     if(refil==HIGH){
-          coffeLvl = 10;
-          cupLvl = 20;
+          coffeLvl = 0;
+          cupLvl = 0;
           EEPROM.write(0, coffeLvl);    //kave
           EEPROM.commit();
           EEPROM.write(1, cupLvl);      //čaše
           EEPROM.commit();
           Serial.println("REFILL - spremljeno");
-          delay(150);
+          delay(100);
     } 
     
     coffeeStat = digitalRead(COFFEE_BTN);
     if(coffeeStat==HIGH){
-      if(coffeeStat>0){
-          coffeLvl--;
+          delay(200);
+          coffeLvl++;
+          cupLvl++;
           EEPROM.write(0, coffeLvl);
           EEPROM.commit();
           Serial.println("COFFEE - spremljeno");
-          delay(150);
-    }}    
+          delay(200);
+          if(coffeLvl>20){
+            coffeLvl=20;}
+    }    
    
     
     cupStat = digitalRead(CUP_BTN);
     if(cupStat==HIGH){
-      if(cupStat>0){
-          cupLvl--;
+          delay(400);
+          cupLvl++;
           EEPROM.write(1, cupLvl);
           EEPROM.commit();
           Serial.println("CUP - spremljeno");
-          delay(150);
-    }}
+          delay(200);
+          if(cupLvl>30){
+            cupLvl=30;}
+    }
     }
 }
 
